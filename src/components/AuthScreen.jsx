@@ -21,16 +21,16 @@ export default function AuthScreen({
   const [submitError, setSubmitError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  // const validateField = (fieldName, fieldValue) => {
-  //   if (fieldName === 'email') {
-  //     if (!fieldValue.trim()) {
-  //       return t('auth.emailRequired');
-  //     }
-  //     if (!emailRegex.test(fieldValue.trim())) {
-  //       return t('auth.emailInvalid');
-  //     }
-  //     return '';
-  //   }
+  const validateField = (fieldName, fieldValue) => {
+    if (fieldName === 'email') {
+      if (!fieldValue.trim()) {
+        return t('auth.emailRequired');
+      }
+      if (!emailRegex.test(fieldValue.trim())) {
+        return t('auth.emailInvalid');
+      }
+      return '';
+    }
 
     if (fieldName === 'password') {
       if (!fieldValue.trim()) {
