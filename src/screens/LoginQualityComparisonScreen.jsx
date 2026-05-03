@@ -51,7 +51,7 @@ function VersionA() {
       <label htmlFor="a-email">Email</label>
       <input
         id="a-email"
-        type="text"
+        
         value={email}
         onChange={(event) => setEmail(event.target.value)}
       />
