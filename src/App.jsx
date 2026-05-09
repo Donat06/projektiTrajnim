@@ -5,6 +5,7 @@ import CartScreen from './screens/CartScreen';
 import AdminScreen from './screens/AdminScreen';
 import HistoryScreen from './screens/HistoryScreen';
 import LoginQualityComparisonScreen from './screens/LoginQualityComparisonScreen';
+import BrandLogo from './components/BrandLogo';
 import { seedMovies } from './data/seedProducts';
 
 const TRANSLATIONS = {
@@ -235,6 +236,31 @@ function getSavedState(key, fallback) {
   }
 }
 
+function getSavedSession(key) {
+  try {
+    const raw = sessionStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveSession(key, value) {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Ignore storage write failures and keep in-memory session.
+  }
+}
+
+function clearSession(key) {
+  try {
+    sessionStorage.removeItem(key);
+  } catch {
+    // Ignore storage clear failures.
+  }
+}
+
 function clampTickets(value) {
   const parsed = Number.parseInt(value, 10);
   if (Number.isNaN(parsed)) {
@@ -271,8 +297,9 @@ function hydrateMovies(storedMovies) {
 }
 
 export default function App() {
+  const SESSION_STORAGE_KEY = 'cineplex-session';
   const [language, setLanguage] = useState(() => getSavedState('cineplex-language', 'en'));
-  const [session, setSession] = useState(null);
+  const [session, setSession] = useState(() => getSavedSession(SESSION_STORAGE_KEY));
   const [showLoginQualityComparison, setShowLoginQualityComparison] = useState(false);
   const [screen, setScreen] = useState('home');
   const [movies] = useState(() => hydrateMovies(getSavedState('cineplex-movies', seedMovies)));
@@ -305,11 +332,14 @@ export default function App() {
   };
 
   const login = (email) => {
-    setSession({ email, loginAt: Date.now() });
+    const nextSession = { email, loginAt: Date.now() };
+    setSession(nextSession);
+    saveSession(SESSION_STORAGE_KEY, nextSession);
   };
 
   const logout = () => {
     setSession(null);
+    clearSession(SESSION_STORAGE_KEY);
   };
 
   const saveMovie = (movieId) => {
@@ -427,10 +457,12 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <div>
-          <p className="eyebrow">{t('app.qaProject')}</p>
-          <h1>Cineplex Stream</h1>
-        </div>
+        <BrandLogo
+          eyebrow={t('app.qaProject')}
+          title="Cineplex Stream"
+          headingTag="h1"
+          compact={true}
+        />
 
         <div className="topbar-actions">
           <span className="top-stat">
