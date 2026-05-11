@@ -116,6 +116,11 @@ const TRANSLATIONS = {
     'history.city': 'City',
     'history.showtime': 'Showtime',
     'history.seatType': 'Seat Type',
+    'history.deleteOrder': 'Delete order',
+    'history.deleteConfirmTitle': 'Delete order',
+    'history.deleteConfirmText': 'Are you sure you want to remove this order from history?',
+    'history.confirmDelete': 'Yes, delete',
+    'history.cancelDelete': 'No',
   },
   sq: {
     'app.qaProject': 'Projekt i Trajnimit QA',
@@ -224,6 +229,11 @@ const TRANSLATIONS = {
     'history.city': 'Qyteti',
     'history.showtime': 'Orari',
     'history.seatType': 'Lloji i Ulëses',
+    'history.deleteOrder': 'Fshi porosinë',
+    'history.deleteConfirmTitle': 'Fshi porosinë',
+    'history.deleteConfirmText': 'A je i sigurt që dëshiron ta heqësh këtë porosi nga historiku?',
+    'history.confirmDelete': 'Po, fshije',
+    'history.cancelDelete': 'Jo',
   },
 };
 
@@ -412,6 +422,12 @@ export default function App() {
     persist('cineplex-history', nextHistoryOrders);
   };
 
+  const deleteHistoryOrder = (orderId) => {
+    const nextHistoryOrders = historyOrders.filter((order) => order.id !== orderId);
+    setHistoryOrders(nextHistoryOrders);
+    persist('cineplex-history', nextHistoryOrders);
+  };
+
   const selectedMovies = useMemo(() => {
     return selections
       .map((item) => {
@@ -509,21 +525,21 @@ export default function App() {
           className={screen === 'movies' ? 'active' : ''}
           onClick={() => setScreen('movies')}
         >
-          {t('app.movies')} ({movies.length})
+          {t('app.movies')}
         </button>
         <button
           type="button"
           className={screen === 'plan' ? 'active' : ''}
           onClick={() => setScreen('plan')}
         >
-          {t('app.myPlan')} ({selectedMovies.length})
+          {t('app.myPlan')}
         </button>
         <button
           type="button"
           className={screen === 'history' ? 'active' : ''}
           onClick={() => setScreen('history')}
         >
-          {t('app.history')} ({historyOrders.length})
+          {t('app.history')}
         </button>
       </nav>
 
@@ -551,7 +567,9 @@ export default function App() {
             t={t}
           />
         )}
-        {screen === 'history' && <HistoryScreen historyOrders={historyOrders} t={t} />}
+        {screen === 'history' && (
+          <HistoryScreen historyOrders={historyOrders} onDeleteOrder={deleteHistoryOrder} t={t} />
+        )}
       </main>
     </div>
   );

@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 function formatDuration(minutes) {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
@@ -14,7 +16,9 @@ function formatDateTime(timestamp) {
   return `${year}-${month}-${day} ${hours}:${mins}`;
 }
 
-export default function HistoryScreen({ historyOrders, t }) {
+export default function HistoryScreen({ historyOrders, onDeleteOrder, t }) {
+  const [confirmDeleteOrder, setConfirmDeleteOrder] = useState(null);
+
   return (
     <section>
       <header className="screen-header">
@@ -34,6 +38,22 @@ export default function HistoryScreen({ historyOrders, t }) {
         <div className="history-list">
           {historyOrders.map((order) => (
             <article key={order.id} className="history-row">
+              <button
+                type="button"
+                className="history-delete-btn"
+                aria-label={t('history.deleteOrder')}
+                title={t('history.deleteOrder')}
+                onClick={() => setConfirmDeleteOrder(order)}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 7h16" />
+                  <path d="M10 11v6" />
+                  <path d="M14 11v6" />
+                  <path d="M6 7l1 12h10l1-12" />
+                  <path d="M9 7V5h6v2" />
+                </svg>
+              </button>
+
               <img src={order.movie.image} alt={order.movie.title} />
 
               <div>
@@ -63,6 +83,31 @@ export default function HistoryScreen({ historyOrders, t }) {
           ))}
         </div>
       </div>
+
+      {confirmDeleteOrder && (
+        <div className="modal-backdrop" onClick={() => setConfirmDeleteOrder(null)}>
+          <div className="confirm-modal" onClick={(event) => event.stopPropagation()}>
+            <h3>{t('history.deleteConfirmTitle')}</h3>
+            <p>{t('history.deleteConfirmText')}</p>
+            <p>{confirmDeleteOrder.movie.title}</p>
+            <div className="confirm-actions">
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={() => {
+                  onDeleteOrder(confirmDeleteOrder.id);
+                  setConfirmDeleteOrder(null);
+                }}
+              >
+                {t('history.confirmDelete')}
+              </button>
+              <button type="button" className="btn" onClick={() => setConfirmDeleteOrder(null)}>
+                {t('history.cancelDelete')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
