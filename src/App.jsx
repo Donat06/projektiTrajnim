@@ -5,6 +5,7 @@ import CartScreen from './screens/CartScreen';
 import AdminScreen from './screens/AdminScreen';
 import HistoryScreen from './screens/HistoryScreen';
 import LoginQualityComparisonScreen from './screens/LoginQualityComparisonScreen';
+import BrandLogo from './components/BrandLogo';
 import { seedMovies } from './data/seedProducts';
 
 const TRANSLATIONS = {
@@ -115,6 +116,11 @@ const TRANSLATIONS = {
     'history.city': 'City',
     'history.showtime': 'Showtime',
     'history.seatType': 'Seat Type',
+    'history.deleteOrder': 'Delete order',
+    'history.deleteConfirmTitle': 'Delete order',
+    'history.deleteConfirmText': 'Are you sure you want to remove this order from history?',
+    'history.confirmDelete': 'Yes, delete',
+    'history.cancelDelete': 'No',
   },
   sq: {
     'app.qaProject': 'Projekt i Trajnimit QA',
@@ -223,6 +229,11 @@ const TRANSLATIONS = {
     'history.city': 'Qyteti',
     'history.showtime': 'Orari',
     'history.seatType': 'Lloji i Ulëses',
+    'history.deleteOrder': 'Fshi porosinë',
+    'history.deleteConfirmTitle': 'Fshi porosinë',
+    'history.deleteConfirmText': 'A je i sigurt që dëshiron ta heqësh këtë porosi nga historiku?',
+    'history.confirmDelete': 'Po, fshije',
+    'history.cancelDelete': 'Jo',
   },
 };
 
@@ -232,6 +243,31 @@ function getSavedState(key, fallback) {
     return raw ? JSON.parse(raw) : fallback;
   } catch {
     return fallback;
+  }
+}
+
+function getSavedSession(key) {
+  try {
+    const raw = sessionStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveSession(key, value) {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Ignore storage write failures and keep in-memory session.
+  }
+}
+
+function clearSession(key) {
+  try {
+    sessionStorage.removeItem(key);
+  } catch {
+    // Ignore storage clear failures.
   }
 }
 
@@ -271,8 +307,9 @@ function hydrateMovies(storedMovies) {
 }
 
 export default function App() {
+  const SESSION_STORAGE_KEY = 'cineplex-session';
   const [language, setLanguage] = useState(() => getSavedState('cineplex-language', 'en'));
-  const [session, setSession] = useState(null);
+  const [session, setSession] = useState(() => getSavedSession(SESSION_STORAGE_KEY));
   const [showLoginQualityComparison, setShowLoginQualityComparison] = useState(false);
   const [screen, setScreen] = useState('home');
   const [movies] = useState(() => hydrateMovies(getSavedState('cineplex-movies', seedMovies)));
@@ -305,11 +342,14 @@ export default function App() {
   };
 
   const login = (email) => {
-    setSession({ email, loginAt: Date.now() });
+    const nextSession = { email, loginAt: Date.now() };
+    setSession(nextSession);
+    saveSession(SESSION_STORAGE_KEY, nextSession);
   };
 
   const logout = () => {
     setSession(null);
+    clearSession(SESSION_STORAGE_KEY);
   };
 
   const saveMovie = (movieId) => {
@@ -382,6 +422,12 @@ export default function App() {
     persist('cineplex-history', nextHistoryOrders);
   };
 
+  const deleteHistoryOrder = (orderId) => {
+    const nextHistoryOrders = historyOrders.filter((order) => order.id !== orderId);
+    setHistoryOrders(nextHistoryOrders);
+    persist('cineplex-history', nextHistoryOrders);
+  };
+
   const selectedMovies = useMemo(() => {
     return selections
       .map((item) => {
@@ -427,10 +473,12 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <div>
-          <p className="eyebrow">{t('app.qaProject')}</p>
-          <h1>Cineplex Stream</h1>
-        </div>
+        <BrandLogo
+          eyebrow={t('app.qaProject')}
+          title="Cineplex Stream"
+          headingTag="h1"
+          compact={true}
+        />
 
         <div className="topbar-actions">
           <span className="top-stat">
@@ -477,21 +525,21 @@ export default function App() {
           className={screen === 'movies' ? 'active' : ''}
           onClick={() => setScreen('movies')}
         >
-          {t('app.movies')} ({movies.length})
+          {t('app.movies')}
         </button>
         <button
           type="button"
           className={screen === 'plan' ? 'active' : ''}
           onClick={() => setScreen('plan')}
         >
-          {t('app.myPlan')} ({selectedMovies.length})
+          {t('app.myPlan')}
         </button>
         <button
           type="button"
           className={screen === 'history' ? 'active' : ''}
           onClick={() => setScreen('history')}
         >
-          {t('app.history')} ({historyOrders.length})
+          {t('app.history')}
         </button>
       </nav>
 
@@ -519,7 +567,9 @@ export default function App() {
             t={t}
           />
         )}
-        {screen === 'history' && <HistoryScreen historyOrders={historyOrders} t={t} />}
+        {screen === 'history' && (
+          <HistoryScreen historyOrders={historyOrders} onDeleteOrder={deleteHistoryOrder} t={t} />
+        )}
       </main>
     </div>
   );
