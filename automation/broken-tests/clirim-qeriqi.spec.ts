@@ -1,3 +1,5 @@
+//Rregullimet e testev
+
 import { test, expect } from '@playwright/test';
 
 test('should switch to Albanian language / duhet te kaloje ne gjuhen shqipe', async ({ page }) => {
